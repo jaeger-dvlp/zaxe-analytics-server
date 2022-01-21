@@ -23,8 +23,10 @@ app.use(allowCrossDomain)
 const getCurrentTime = () => {
   let currentDate = new Date()
   let today = `${currentDate.getFullYear()}_${currentDate
-    .toLocaleString('default', { month: 'long' })
-    .toLowerCase()}_${currentDate.getDay()}`
+    .toLocaleString('tr', { month: 'long' })
+    .toLowerCase()}_${currentDate.toLocaleDateString('tr', {
+    weekday: 'long'
+  })}`
   return today
 }
 
