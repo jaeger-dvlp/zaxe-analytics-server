@@ -20,16 +20,6 @@ const allowCrossDomain = (req, res, next) => {
 app.use(cors())
 app.use(allowCrossDomain)
 
-const getCurrentTime = () => {
-  let currentDate = new Date()
-  let today = `${currentDate.getFullYear()} ${currentDate.toLocaleString('tr', {
-    month: 'long'
-  })} ${currentDate.toLocaleDateString('tr', {
-    weekday: 'long'
-  })}`
-  return today
-}
-
 app.post('/api/setVote', jsonParser, async (req, res) => {
   try {
     const voteListLength = req.body.voteListLength
