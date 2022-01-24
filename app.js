@@ -31,32 +31,37 @@ const getCurrentTime = () => {
 }
 
 app.post('/api/setVote', jsonParser, async (req, res) => {
-  MongoClient.connect(dbUrl, async (err, client) => {
-    let zaxeDB = client.db('zaxe-analytic').collection('analytics')
-    let now = getCurrentTime()
-    const incomingQuery = req.body.query
-    try {
-      console.log(now)
-      if ((await zaxeDB.find({ date: now }).toArray()).length > 0) {
-        let selectedData = await zaxeDB.find({ date: now }).toArray()
-        let voteNow = selectedData[0].votes[incomingQuery] + 1
+  try {
+    const voteListLength = req.body.voteListLength
+    const voteElement = req.body.voteElement
+    const voteDate = req.body.voteDate
+    const newVoteArr = []
+    await MongoClient.connect(dbUrl, async (err, client) => {
+      const zaxeDB = client.db('zaxe-analytic').collection('analytics')
+
+      if ((await zaxeDB.find({ date: voteDate }).toArray()).length > 0) {
+        const selectedData = await zaxeDB.find({ date: voteDate }).toArray()
+        const newVote = selectedData[0].votes[voteElement] + 1
+
         await zaxeDB.updateOne(
-          { date: now },
-          { $set: { [`votes.${incomingQuery}`]: await voteNow } }
+          { date: voteDate },
+          { $set: { [`votes.${voteElement}`]: await newVote } }
         )
       } else {
-        let newVote = [0, 0, 0, 0]
-        newVote[incomingQuery] += 1
-        await zaxeDB.insertOne({ date: now, votes: newVote })
+        for (let x = 0; x < voteListLength; x++) {
+          newVoteArr.push(0)
+        }
+        newVoteArr[voteElement] += 1
+        await zaxeDB.insertOne({ date: voteDate, votes: newVoteArr })
       }
-      await res.status(200).json({ message: 'Vote successfully sent.' })
-    } catch (error) {
-      console.log(error)
-      await res.status(500).json({ message: 'An error occurred.' })
-    }
-
-    await client.close()
-  })
+      await client.close()
+    })
+    await res
+      .status(200)
+      .json({ code: 200, message: 'Vote successfully sent.' })
+  } catch (err) {
+    await res.status(500).json({ code: 500, message: 'An error occured.' })
+  }
 })
 
 app.listen(port, (err) => {
